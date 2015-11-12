@@ -1,17 +1,34 @@
-if (Meteor.isClient) {
-  // counter starts at 0
-  Session.setDefault('counter', 0);
+Tasks = new Mongo.Collection('tasks');
 
-  Template.hello.helpers({
-    counter: function () {
-      return Session.get('counter');
+if (Meteor.isClient) {
+  Template.body.helpers({
+    tasks: function() {
+      return Tasks.find({}, {sort: {createdAt: -1}});
     }
   });
 
-  Template.hello.events({
-    'click button': function () {
-      // increment the counter when button is clicked
-      Session.set('counter', Session.get('counter') + 1);
+  Template.body.events({
+    'submit .new-task': function(event) {
+      event.preventDefault();
+
+      var text = event.target.text.value;
+      Tasks.insert({
+        text: text,
+        createdAt: new Date()
+      });
+
+      event.target.text.value = '';
+    },
+  });
+
+  Template.task.events({
+    'click .toggle-checked': function() {
+      Tasks.update(this._id, {
+        $set: {checked: !this.checked}
+      });
+    },
+    'click .delete': function() {
+      Tasks.remove(this._id);
     }
   });
 }
@@ -19,5 +36,6 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
+    console.log('started.');
   });
 }
